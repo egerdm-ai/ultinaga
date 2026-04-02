@@ -71,8 +71,10 @@ export function buildPlayerRows(
   scoreUs: number,
   scoreThem: number,
   mode: GameMode,
+  exemptConsecutivePlayIds: string[] = [],
 ): PlayerRowStats[] {
   const last = new Set(lastPointIds);
+  const exempt = new Set(exemptConsecutivePlayIds);
   return roster.map((player) => {
     const played = getPlayedCount(player.id, points);
     const lastPt = getLastPlayedPoint(player.id, points);
@@ -87,7 +89,7 @@ export function buildPlayerRows(
       lastPoint: lastPt,
       since,
       urgency,
-      eligibleNext: !last.has(player.id),
+      eligibleNext: !last.has(player.id) || exempt.has(player.id),
       usageBand: usageBand(played, player.minTargetPoints, player.softMaxPoints),
     };
   });

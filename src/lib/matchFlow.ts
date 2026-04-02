@@ -20,9 +20,15 @@ export function genderAbbaForPoint(
   return other;
 }
 
-/** Biz sayı aldıysak sonraki D, onlar aldıysa sonraki O. */
-export function nextSideAfterPoints(points: MatchPoint[]): PointSide {
-  if (points.length === 0) return "O";
+/**
+ * Who pulls / plays next point. After at least one recorded point, flips from last result.
+ * With no points yet, uses `startingSide` (match kickoff: O or D).
+ */
+export function nextSideAfterPoints(
+  points: MatchPoint[],
+  startingSideWhenEmpty: PointSide = "O",
+): PointSide {
+  if (points.length === 0) return startingSideWhenEmpty;
   const last = [...points].sort((a, b) => b.pointNumber - a.pointNumber)[0];
   return last.result === "scored" ? "D" : "O";
 }

@@ -29,15 +29,28 @@ export function GroupedPlayerBuckets({
   onPlayerClick,
   pointsRecorded,
   isPickable,
+  lastPointPlayerIds,
+  exemptConsecutivePlayIds = [],
 }: {
   rows: EnrichedPlayerRow[];
   selectedIds: Set<string>;
   onPlayerClick: (playerId: string) => void;
   pointsRecorded: number;
   isPickable: (playerId: string) => boolean;
+  lastPointPlayerIds: string[];
+  exemptConsecutivePlayIds?: string[];
 }) {
   const [sortKey, setSortKey] = React.useState<SortKey>("urgency");
   const [hybridsOnly, setHybridsOnly] = React.useState(false);
+
+  const lastSet = React.useMemo(
+    () => new Set(lastPointPlayerIds),
+    [lastPointPlayerIds],
+  );
+  const exemptSet = React.useMemo(
+    () => new Set(exemptConsecutivePlayIds),
+    [exemptConsecutivePlayIds],
+  );
 
   const byBucket = BUCKET_ORDER.map((key) => {
     let list = rows.filter((r) => r.bucket === key);
@@ -114,6 +127,10 @@ export function GroupedPlayerBuckets({
               {bucketRows.map((r) => {
                 const sel = selectedIds.has(r.player.id);
                 const pickable = isPickable(r.player.id);
+                const playedLast = lastSet.has(r.player.id);
+                /** Muaf liste: son sayıda oynadı ama tekrar seçilebilir — kartı renksiz/nötr tut */
+                const repeatPlain =
+                  playedLast && exemptSet.has(r.player.id) && pickable;
                 const heat = r.since / maxSince;
                 const sMax = soft(r);
                 const loadPct = Math.min(1, r.played / Math.max(1, sMax));
@@ -127,7 +144,9 @@ export function GroupedPlayerBuckets({
                         ? r.eligibleNext
                           ? "Gender quota full (4M-3F / 4F-3M)"
                           : "Played last point"
-                        : undefined
+                        : repeatPlain
+                          ? "Played last point — can play again"
+                          : undefined
                     }
                     onClick={() => pickable && onPlayerClick(r.player.id)}
                     className={cn(
@@ -139,17 +158,24 @@ export function GroupedPlayerBuckets({
                         "cursor-not-allowed border-transparent bg-muted/70 text-muted-foreground opacity-75",
                       !sel &&
                         pickable &&
+                        repeatPlain &&
+                        "border-border bg-background text-foreground shadow-none",
+                      !sel &&
+                        pickable &&
+                        !repeatPlain &&
                         r.eligibleNext &&
                         r.urgency >= 0.55 &&
                         "border-red-500/40 bg-red-500/10",
                       !sel &&
                         pickable &&
+                        !repeatPlain &&
                         r.eligibleNext &&
                         r.urgency < 0.55 &&
                         (r.urgency >= 0.28 || r.relative.vsGroup === "below") &&
                         "border-amber-500/35 bg-amber-500/10",
                       !sel &&
                         pickable &&
+                        !repeatPlain &&
                         r.eligibleNext &&
                         r.urgency < 0.28 &&
                         r.relative.vsGroup !== "below" &&
@@ -184,7 +210,13 @@ export function GroupedPlayerBuckets({
                         Δ{r.since}
                       </span>
                       <span className="tabular-nums">#{r.lastPoint ?? "—"}</span>
-                      <span>{r.eligibleNext ? "✓" : "✗"}</span>
+                      {repeatPlain ? (
+                        <span className="text-[8px] font-medium text-muted-foreground">
+                          Last pt
+                        </span>
+                      ) : (
+                        <span>{r.eligibleNext ? "✓" : "✗"}</span>
+                      )}
                       <UrgencyBadge
                         status={urgencyStatus(r.urgency)}
                         className="h-3.5 border px-0.5 text-[7px]"
@@ -200,26 +232,33 @@ export function GroupedPlayerBuckets({
                         {vsGroupLabel(r.relative.vsGroup)}
                       </Badge>
                     </div>
-                    <div
-                      className="mt-0.5 flex h-0.5 gap-px overflow-hidden rounded-sm bg-muted"
-                      title="Load / rest"
-                    >
+                    {repeatPlain ? (
                       <div
-                        className={cn(
-                          "h-full",
-                          loadPct >= 1
-                            ? "bg-red-500/90"
-                            : loadPct >= 0.85
-                              ? "bg-amber-500/90"
-                              : "bg-primary/70",
-                        )}
-                        style={{ width: `${Math.min(100, loadPct * 50)}%` }}
+                        className="mt-0.5 h-0.5 rounded-sm bg-border"
+                        title="Played last point — still selectable"
                       />
+                    ) : (
                       <div
-                        className="h-full bg-orange-500/80"
-                        style={{ width: `${Math.min(100, heat * 50)}%` }}
-                      />
-                    </div>
+                        className="mt-0.5 flex h-0.5 gap-px overflow-hidden rounded-sm bg-muted"
+                        title="Load / rest"
+                      >
+                        <div
+                          className={cn(
+                            "h-full",
+                            loadPct >= 1
+                              ? "bg-red-500/90"
+                              : loadPct >= 0.85
+                                ? "bg-amber-500/90"
+                                : "bg-primary/70",
+                          )}
+                          style={{ width: `${Math.min(100, loadPct * 50)}%` }}
+                        />
+                        <div
+                          className="h-full bg-orange-500/80"
+                          style={{ width: `${Math.min(100, heat * 50)}%` }}
+                        />
+                      </div>
+                    )}
                   </button>
                 );
               })}

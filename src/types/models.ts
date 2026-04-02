@@ -86,4 +86,6 @@ export interface TeamRules {
   twoTopFemalesOn4F: boolean;
   topFemaleLevel: Level;
   ramNajaMainHandlerPenaltyOnly: boolean;
+  /** Bu ID'ler bir önceki sayıda oynamış olsa bile sonraki sayıda seçilebilir (üst üste oynayabilir). */
+  exemptConsecutivePlayIds?: string[];
 }

@@ -64,6 +64,7 @@ export const teamRulesSchema = z.object({
   twoTopFemalesOn4F: z.boolean(),
   topFemaleLevel: levelSchema,
   ramNajaMainHandlerPenaltyOnly: z.boolean(),
+  exemptConsecutivePlayIds: z.array(z.string()).optional(),
 });
 
 export const matchStateSchema = z.object({

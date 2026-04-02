@@ -36,6 +36,8 @@ interface MatchState {
   nextGenderPattern: GenderPattern;
   /** İlk sayı / maç başı oran; ABBA döngüsü buna göre (sadece bunu seçersin). */
   startingGenderPattern: GenderPattern;
+  /** Maçın ilk sayısında O mu D mi (pull / savunma). */
+  startingSide: PointSide;
 
   setOpponent: (o: string) => void;
   setMode: (m: GameMode) => void;
@@ -43,6 +45,7 @@ interface MatchState {
   setNextSide: (s: PointSide) => void;
   setNextGenderPattern: (g: GenderPattern) => void;
   setStartingGenderPattern: (g: GenderPattern) => void;
+  setStartingSide: (s: PointSide) => void;
   setScore: (us: number, them: number) => void;
   bumpScore: (usDelta: number, themDelta: number) => void;
   confirmPoint: (payload: {
@@ -73,6 +76,7 @@ export const useMatchStore = create<MatchState>()(
       nextSide: "O",
       nextGenderPattern: "4M3F",
       startingGenderPattern: "4M3F",
+      startingSide: "O",
 
       setOpponent: (opponent) => set({ opponent }),
       setMode: (mode) => set({ mode }),
@@ -81,11 +85,16 @@ export const useMatchStore = create<MatchState>()(
       setStartingGenderPattern: (startingGenderPattern) =>
         set((s) => ({
           startingGenderPattern,
-          nextSide: nextSideAfterPoints(s.points),
+          nextSide: nextSideAfterPoints(s.points, s.startingSide),
           nextGenderPattern: nextGenderPatternAfterPoints(
             s.points,
             startingGenderPattern,
           ),
+        })),
+      setStartingSide: (startingSide) =>
+        set((s) => ({
+          startingSide,
+          ...(s.points.length === 0 ? { nextSide: startingSide } : {}),
         })),
       setScore: (scoreUs, scoreThem) => set({ scoreUs, scoreThem }),
 
@@ -133,7 +142,7 @@ export const useMatchStore = create<MatchState>()(
           points: next,
           scoreUs: last?.scoreUs ?? 0,
           scoreThem: last?.scoreThem ?? 0,
-          nextSide: nextSideAfterPoints(next),
+          nextSide: nextSideAfterPoints(next, state.startingSide),
           nextGenderPattern: nextGenderPatternAfterPoints(next, starting),
         });
       },
@@ -145,13 +154,15 @@ export const useMatchStore = create<MatchState>()(
           scoreUs: 0,
           scoreThem: 0,
           startingGenderPattern: "4M3F",
-          nextSide: nextSideAfterPoints([]),
+          startingSide: "O",
+          nextSide: nextSideAfterPoints([], "O"),
           nextGenderPattern: nextGenderPatternAfterPoints([], "4M3F"),
         }),
 
       loadExampleMatch: () => {
         const pts = SEED_EXAMPLE_POINTS;
         const starting = pts[0]?.genderPattern ?? "4M3F";
+        const kick = pts[0]?.side ?? "O";
         set({
           matchId: newMatchId(),
           opponent: SEED_EXAMPLE_OPPONENT,
@@ -160,7 +171,8 @@ export const useMatchStore = create<MatchState>()(
           scoreUs: 11,
           scoreThem: 6,
           startingGenderPattern: starting,
-          nextSide: nextSideAfterPoints(pts),
+          startingSide: kick,
+          nextSide: nextSideAfterPoints(pts, kick),
           nextGenderPattern: nextGenderPatternAfterPoints(pts, starting),
         });
       },
@@ -171,7 +183,7 @@ export const useMatchStore = create<MatchState>()(
     }),
     {
       name: "ulm-match",
-      version: 1,
+      version: 2,
       migrate: (persistedState: unknown) => {
         const s = persistedState as Partial<MatchState> & {
           points?: MatchPoint[];
@@ -179,10 +191,12 @@ export const useMatchStore = create<MatchState>()(
         const pts = s.points ?? [];
         const starting =
           s.startingGenderPattern ?? pts[0]?.genderPattern ?? "4M3F";
+        const startingSide = s.startingSide ?? pts[0]?.side ?? "O";
         return {
           ...s,
           startingGenderPattern: starting,
-          nextSide: nextSideAfterPoints(pts),
+          startingSide,
+          nextSide: nextSideAfterPoints(pts, startingSide),
           nextGenderPattern: nextGenderPatternAfterPoints(pts, starting),
         } as MatchState;
       },

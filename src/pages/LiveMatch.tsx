@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -47,6 +46,7 @@ import {
 } from "@/lib/lineSlotting";
 import { replaceIneligibleInLine } from "@/lib/cloneLine";
 import { canAddPlayerToLine } from "@/lib/genderQuota";
+import { cn } from "@/lib/utils";
 
 export function LiveMatch() {
   const players = useRosterStore((s) => s.players);
@@ -59,10 +59,12 @@ export function LiveMatch() {
   const nextSide = useMatchStore((s) => s.nextSide);
   const nextGenderPattern = useMatchStore((s) => s.nextGenderPattern);
   const startingGenderPattern = useMatchStore((s) => s.startingGenderPattern);
+  const startingSide = useMatchStore((s) => s.startingSide);
   const setMode = useMatchStore((s) => s.setMode);
   const setStartingGenderPattern = useMatchStore(
     (s) => s.setStartingGenderPattern,
   );
+  const setStartingSide = useMatchStore((s) => s.setStartingSide);
   const bumpScore = useMatchStore((s) => s.bumpScore);
   const confirmPoint = useMatchStore((s) => s.confirmPoint);
   const undoLastPoint = useMatchStore((s) => s.undoLastPoint);
@@ -129,9 +131,19 @@ export function LiveMatch() {
       scoreUs,
       scoreThem,
       mode,
+      teamRules.exemptConsecutivePlayIds ?? [],
     );
     return enrichPlayerRows(base, players);
-  }, [players, points, currentPoint, lastIds, scoreUs, scoreThem, mode]);
+  }, [
+    players,
+    points,
+    currentPoint,
+    lastIds,
+    scoreUs,
+    scoreThem,
+    mode,
+    teamRules.exemptConsecutivePlayIds,
+  ]);
 
   const fillerPriority = useMemo(
     () =>
@@ -195,7 +207,6 @@ export function LiveMatch() {
 
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<PointResult>("scored");
-  const [notes, setNotes] = useState("");
   const [llmLoading, setLlmLoading] = useState(false);
   const [llmText, setLlmText] = useState<string | null>(null);
   const [llmErr, setLlmErr] = useState<string | null>(null);
@@ -243,11 +254,9 @@ export function LiveMatch() {
       result,
       scoreUs: nextUs,
       scoreThem: nextThem,
-      notes: notes || undefined,
     });
     setOpen(false);
     setSlots(emptySlots());
-    setNotes("");
     setActiveSlot(null);
   };
 
@@ -310,7 +319,6 @@ export function LiveMatch() {
     setSlots(emptySlots());
     setActiveSlot(null);
     setMatrixSelectedPoint(null);
-    setNotes("");
     setOpen(false);
     setCompareOpen(false);
     setLlmText(null);
@@ -406,6 +414,11 @@ export function LiveMatch() {
             onClear={clearLine}
             onPlacePlayer={handlePlacePlayer}
             isPickable={isPickable}
+            pointsRecorded={points.length}
+            startingGenderPattern={startingGenderPattern}
+            onStartingGenderPatternChange={setStartingGenderPattern}
+            startingSide={startingSide}
+            onStartingSideChange={setStartingSide}
           />
         </section>
 
@@ -415,18 +428,25 @@ export function LiveMatch() {
               Roster · pick
             </h2>
             <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger className={buttonVariants({ size: "sm" })}>
+              <DialogTrigger
+                className={cn(
+                  buttonVariants({ variant: "default", size: "sm" }),
+                  "h-10 min-h-[44px] shrink-0 touch-manipulation px-4 text-sm font-semibold shadow-sm",
+                )}
+              >
                 Confirm point
               </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Record point {currentPoint}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 text-sm">
-                  <p className="text-muted-foreground">
-                    Line from slots: {slotsToIds(slots).length}/7
+              <DialogContent className="max-h-[90vh] gap-6 overflow-y-auto border-2 p-5 sm:max-w-lg sm:p-6">
+                <DialogHeader className="space-y-1">
+                  <DialogTitle className="text-left text-xl font-bold tracking-tight sm:text-2xl">
+                    Point {currentPoint}
+                  </DialogTitle>
+                  <p className="text-base text-muted-foreground">
+                    Line complete: {slotsToIds(slots).length}/7 players
                   </p>
-                  <div className="rounded-md border bg-muted/40 p-2 font-mono text-[11px]">
+                </DialogHeader>
+                <div className="space-y-5 text-base">
+                  <div className="rounded-lg border-2 border-border bg-muted/30 p-3">
                     {assignPlayersToSlots(slotsToIds(slots), players)
                       ? (() => {
                           const sl = assignPlayersToSlots(
@@ -434,40 +454,80 @@ export function LiveMatch() {
                             players,
                           )!;
                           return (
-                            <div className="grid gap-1">
+                            <div className="grid gap-2">
                               {Object.entries(sl).map(([k, v]) => (
-                                <div key={k} className="flex justify-between gap-2">
-                                  <span className="text-muted-foreground">{k}</span>
-                                  <span>{map.get(v)?.name ?? v}</span>
+                                <div
+                                  key={k}
+                                  className="flex justify-between gap-3 text-sm sm:text-base"
+                                >
+                                  <span className="font-mono text-muted-foreground">
+                                    {k}
+                                  </span>
+                                  <span className="font-medium">
+                                    {map.get(v)?.name ?? v}
+                                  </span>
                                 </div>
                               ))}
                             </div>
                           );
                         })()
-                      : slotsToIds(slots).map((id) => map.get(id)?.name).join(", ")}
+                      : (
+                          <p className="text-muted-foreground">
+                            {slotsToIds(slots).map((id) => map.get(id)?.name).join(", ")}
+                          </p>
+                        )}
                   </div>
-                  <div className="space-y-1">
-                    <Label>Result</Label>
+                  <div className="space-y-3">
+                    <Label className="text-base font-semibold">Who won?</Label>
                     <RadioGroup
                       value={result}
                       onValueChange={(v) => setResult(v as PointResult)}
-                      className="flex gap-4"
+                      className="grid gap-3"
                     >
-                      <div className="flex items-center gap-2">
-                        <RadioGroupItem value="scored" id="scored" />
-                        <Label htmlFor="scored">We win point</Label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <RadioGroupItem value="conceded" id="conceded" />
-                        <Label htmlFor="conceded">They win</Label>
-                      </div>
+                      <label
+                        htmlFor="scored"
+                        className={cn(
+                          "flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-colors",
+                          result === "scored"
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-card hover:bg-muted/50",
+                        )}
+                      >
+                        <RadioGroupItem
+                          value="scored"
+                          id="scored"
+                          className="size-5 shrink-0 border-2"
+                        />
+                        <span className="text-lg font-semibold leading-snug sm:text-xl">
+                          We win point
+                        </span>
+                      </label>
+                      <label
+                        htmlFor="conceded"
+                        className={cn(
+                          "flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-colors",
+                          result === "conceded"
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-card hover:bg-muted/50",
+                        )}
+                      >
+                        <RadioGroupItem
+                          value="conceded"
+                          id="conceded"
+                          className="size-5 shrink-0 border-2"
+                        />
+                        <span className="text-lg font-semibold leading-snug sm:text-xl">
+                          They win
+                        </span>
+                      </label>
                     </RadioGroup>
                   </div>
-                  <Label>Notes</Label>
-                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
                 </div>
-                <DialogFooter>
+                <DialogFooter className="sm:justify-stretch">
                   <Button
+                    type="button"
+                    className="h-14 w-full touch-manipulation text-base font-semibold sm:text-lg"
+                    size="lg"
                     disabled={slotsToIds(slots).length !== 7}
                     onClick={() => submitPoint()}
                   >
@@ -483,6 +543,8 @@ export function LiveMatch() {
             onPlayerClick={handlePlacePlayer}
             pointsRecorded={points.length}
             isPickable={isPickable}
+            lastPointPlayerIds={lastIds}
+            exemptConsecutivePlayIds={teamRules.exemptConsecutivePlayIds ?? []}
           />
         </section>
       </div>

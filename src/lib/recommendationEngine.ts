@@ -49,9 +49,13 @@ function quickSuitability(
 export function getEligiblePlayerIds(
   roster: Player[],
   lastPointPlayerIds: string[],
+  exemptConsecutivePlayIds: string[] = [],
 ): string[] {
   const last = new Set(lastPointPlayerIds);
-  return roster.filter((p) => !last.has(p.id)).map((p) => p.id);
+  const exempt = new Set(exemptConsecutivePlayIds);
+  return roster
+    .filter((p) => !last.has(p.id) || exempt.has(p.id))
+    .map((p) => p.id);
 }
 
 function bucketEligible(
@@ -257,7 +261,11 @@ export function recommendNextLine(
   },
 ): RecommendationResult {
   const map = rosterById(roster);
-  const baseEligible = getEligiblePlayerIds(roster, opts.lastPointPlayerIds);
+  const baseEligible = getEligiblePlayerIds(
+    roster,
+    opts.lastPointPlayerIds,
+    teamRules.exemptConsecutivePlayIds ?? [],
+  );
   const locked = (opts.lockedPlayerIds ?? []).filter((id) =>
     baseEligible.includes(id),
   );

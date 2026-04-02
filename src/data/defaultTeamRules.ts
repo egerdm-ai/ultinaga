@@ -16,4 +16,5 @@ export const DEFAULT_TEAM_RULES: TeamRules = {
   twoTopFemalesOn4F: false,
   topFemaleLevel: "strong",
   ramNajaMainHandlerPenaltyOnly: true,
+  exemptConsecutivePlayIds: ["ege", "alp", "yesim", "joel"],
 };

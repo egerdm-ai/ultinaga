@@ -20,10 +20,12 @@ export function validateLineSize(playerIds: string[]): boolean {
 export function validateNoConsecutive(
   linePlayerIds: string[],
   lastPointPlayerIds: string[],
+  exemptConsecutivePlayIds: string[] = [],
 ): boolean {
   if (lastPointPlayerIds.length === 0) return true;
   const last = new Set(lastPointPlayerIds);
-  return !linePlayerIds.some((id) => last.has(id));
+  const exempt = new Set(exemptConsecutivePlayIds);
+  return !linePlayerIds.some((id) => last.has(id) && !exempt.has(id));
 }
 
 export function validateGenderPattern(
@@ -200,7 +202,13 @@ export function validateFullLine(
 ): ValidationResult {
   const base = validateTeamRules(linePlayerIds, ctx);
   const errors = [...base.errors];
-  if (!validateNoConsecutive(linePlayerIds, lastPointPlayerIds)) {
+  if (
+    !validateNoConsecutive(
+      linePlayerIds,
+      lastPointPlayerIds,
+      ctx.teamRules.exemptConsecutivePlayIds ?? [],
+    )
+  ) {
     errors.push("A player who played the previous point cannot play this point.");
   }
   return { ok: errors.length === 0, errors };
