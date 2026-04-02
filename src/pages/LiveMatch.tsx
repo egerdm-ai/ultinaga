@@ -1,13 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -42,6 +41,7 @@ import {
   slotsToIds,
   addPlayerToSlots,
   assignPlayersToSlots,
+  SLOT_ORDER,
   type SlotId,
 } from "@/lib/lineSlotting";
 import { replaceIneligibleInLine } from "@/lib/cloneLine";
@@ -419,124 +419,14 @@ export function LiveMatch() {
             onStartingGenderPatternChange={setStartingGenderPattern}
             startingSide={startingSide}
             onStartingSideChange={setStartingSide}
+            onConfirmPointClick={() => setOpen(true)}
           />
         </section>
 
         <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-br from-emerald-500/[0.06] to-background p-2 landscape:min-w-0 landscape:p-3">
-          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-[11px] font-bold uppercase tracking-widest text-emerald-900 dark:text-emerald-100">
-              Roster · pick
-            </h2>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger
-                className={cn(
-                  buttonVariants({ variant: "default", size: "sm" }),
-                  "h-10 min-h-[44px] shrink-0 touch-manipulation px-4 text-sm font-semibold shadow-sm",
-                )}
-              >
-                Confirm point
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] gap-6 overflow-y-auto border-2 p-5 sm:max-w-lg sm:p-6">
-                <DialogHeader className="space-y-1">
-                  <DialogTitle className="text-left text-xl font-bold tracking-tight sm:text-2xl">
-                    Point {currentPoint}
-                  </DialogTitle>
-                  <p className="text-base text-muted-foreground">
-                    Line complete: {slotsToIds(slots).length}/7 players
-                  </p>
-                </DialogHeader>
-                <div className="space-y-5 text-base">
-                  <div className="rounded-lg border-2 border-border bg-muted/30 p-3">
-                    {assignPlayersToSlots(slotsToIds(slots), players)
-                      ? (() => {
-                          const sl = assignPlayersToSlots(
-                            slotsToIds(slots),
-                            players,
-                          )!;
-                          return (
-                            <div className="grid gap-2">
-                              {Object.entries(sl).map(([k, v]) => (
-                                <div
-                                  key={k}
-                                  className="flex justify-between gap-3 text-sm sm:text-base"
-                                >
-                                  <span className="font-mono text-muted-foreground">
-                                    {k}
-                                  </span>
-                                  <span className="font-medium">
-                                    {map.get(v)?.name ?? v}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        })()
-                      : (
-                          <p className="text-muted-foreground">
-                            {slotsToIds(slots).map((id) => map.get(id)?.name).join(", ")}
-                          </p>
-                        )}
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">Who won?</Label>
-                    <RadioGroup
-                      value={result}
-                      onValueChange={(v) => setResult(v as PointResult)}
-                      className="grid gap-3"
-                    >
-                      <label
-                        htmlFor="scored"
-                        className={cn(
-                          "flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-colors",
-                          result === "scored"
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-card hover:bg-muted/50",
-                        )}
-                      >
-                        <RadioGroupItem
-                          value="scored"
-                          id="scored"
-                          className="size-5 shrink-0 border-2"
-                        />
-                        <span className="text-lg font-semibold leading-snug sm:text-xl">
-                          We win point
-                        </span>
-                      </label>
-                      <label
-                        htmlFor="conceded"
-                        className={cn(
-                          "flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-colors",
-                          result === "conceded"
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-card hover:bg-muted/50",
-                        )}
-                      >
-                        <RadioGroupItem
-                          value="conceded"
-                          id="conceded"
-                          className="size-5 shrink-0 border-2"
-                        />
-                        <span className="text-lg font-semibold leading-snug sm:text-xl">
-                          They win
-                        </span>
-                      </label>
-                    </RadioGroup>
-                  </div>
-                </div>
-                <DialogFooter className="sm:justify-stretch">
-                  <Button
-                    type="button"
-                    className="h-14 w-full touch-manipulation text-base font-semibold sm:text-lg"
-                    size="lg"
-                    disabled={slotsToIds(slots).length !== 7}
-                    onClick={() => submitPoint()}
-                  >
-                    Save point
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <h2 className="mb-1 text-[11px] font-bold uppercase tracking-widest text-emerald-900 dark:text-emerald-100">
+            Roster · pick
+          </h2>
           <GroupedPlayerBuckets
             rows={enriched}
             selectedIds={selectedSet}
@@ -548,6 +438,118 @@ export function LiveMatch() {
           />
         </section>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent
+          showCloseButton
+          className="max-h-[min(92vh,720px)] gap-3 overflow-y-auto border-2 p-3 sm:max-w-2xl sm:p-4 landscape:max-h-[min(88vh,400px)] landscape:gap-2 landscape:p-3 landscape:sm:max-w-[min(96vw,44rem)]"
+        >
+          <DialogHeader className="space-y-0.5 pr-8 landscape:space-y-0">
+            <DialogTitle className="text-left text-lg font-bold tracking-tight sm:text-xl landscape:text-base">
+              Point {currentPoint}
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground landscape:text-xs">
+              Line complete: {slotsToIds(slots).length}/7 players
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-3 landscape:space-y-2">
+            <div className="rounded-lg border border-border bg-muted/30 p-2 landscape:p-1.5">
+              {assignPlayersToSlots(slotsToIds(slots), players)
+                ? (() => {
+                    const sl = assignPlayersToSlots(
+                      slotsToIds(slots),
+                      players,
+                    )!;
+                    return (
+                      <div className="flex flex-wrap items-stretch justify-start gap-1.5 landscape:gap-1">
+                        {SLOT_ORDER.map((slot) => (
+                          <div
+                            key={slot}
+                            className="flex min-w-0 items-center gap-1.5 rounded-md border border-border/80 bg-background/80 px-2 py-1 text-xs landscape:gap-1 landscape:px-1.5 landscape:py-0.5 landscape:text-[11px]"
+                          >
+                            <span className="shrink-0 font-mono text-[10px] text-muted-foreground landscape:text-[9px]">
+                              {slot}
+                            </span>
+                            <span className="min-w-0 truncate font-semibold">
+                              {map.get(sl[slot]!)?.name ?? sl[slot]}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()
+                : (
+                    <p className="text-xs text-muted-foreground">
+                      {slotsToIds(slots)
+                        .map((id) => map.get(id)?.name)
+                        .join(" · ")}
+                    </p>
+                  )}
+            </div>
+
+            <div className="space-y-2 landscape:space-y-1.5">
+              <Label className="text-sm font-semibold landscape:text-xs">
+                Who won?
+              </Label>
+              <RadioGroup
+                value={result}
+                onValueChange={(v) => setResult(v as PointResult)}
+                className="grid grid-cols-2 gap-2 landscape:gap-1.5"
+              >
+                <label
+                  htmlFor="scored"
+                  className={cn(
+                    "flex cursor-pointer touch-manipulation flex-col items-center gap-1 rounded-xl border-2 p-2.5 transition-colors landscape:p-2",
+                    result === "scored"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:bg-muted/50",
+                  )}
+                >
+                  <RadioGroupItem
+                    value="scored"
+                    id="scored"
+                    className="size-4 shrink-0 border-2 landscape:size-3.5"
+                  />
+                  <span className="text-center text-sm font-semibold leading-tight landscape:text-xs">
+                    We win
+                  </span>
+                </label>
+                <label
+                  htmlFor="conceded"
+                  className={cn(
+                    "flex cursor-pointer touch-manipulation flex-col items-center gap-1 rounded-xl border-2 p-2.5 transition-colors landscape:p-2",
+                    result === "conceded"
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:bg-muted/50",
+                  )}
+                >
+                  <RadioGroupItem
+                    value="conceded"
+                    id="conceded"
+                    className="size-4 shrink-0 border-2 landscape:size-3.5"
+                  />
+                  <span className="text-center text-sm font-semibold leading-tight landscape:text-xs">
+                    They win
+                  </span>
+                </label>
+              </RadioGroup>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-1 border-0 bg-transparent p-0 shadow-none sm:justify-stretch">
+            <Button
+              type="button"
+              className="h-12 w-full touch-manipulation text-base font-semibold landscape:h-11 landscape:text-sm"
+              size="lg"
+              disabled={slotsToIds(slots).length !== 7}
+              onClick={() => submitPoint()}
+            >
+              Save point
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <section className="border-t-[3px] border-violet-500/40 bg-muted/25 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="sticky top-0 z-10 flex items-center justify-center gap-2 border-b border-border/60 bg-muted/95 px-3 py-2.5 backdrop-blur-md">

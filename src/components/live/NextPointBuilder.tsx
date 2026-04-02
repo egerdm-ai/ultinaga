@@ -18,7 +18,11 @@ import type {
 import { SelectedLineStrip } from "@/components/live/SelectedLineStrip";
 import type { LineValidationContext } from "@/lib/rules";
 import type { ScoreContext } from "@/lib/scoring";
-import { sortCandidatesForSlot, type SlotId } from "@/lib/lineSlotting";
+import {
+  sortCandidatesForSlot,
+  slotsToIds,
+  type SlotId,
+} from "@/lib/lineSlotting";
 import { rosterById } from "@/lib/playerStats";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +50,7 @@ export function NextPointBuilder({
   onStartingGenderPatternChange,
   startingSide,
   onStartingSideChange,
+  onConfirmPointClick,
 }: {
   currentPoint: number;
   scoreUs: number;
@@ -70,7 +75,10 @@ export function NextPointBuilder({
   onClear: () => void;
   onPlacePlayer: (playerId: string) => void;
   isPickable: (playerId: string) => boolean;
+  onConfirmPointClick: () => void;
 }) {
+  const lineComplete = slotsToIds(slots).length === 7;
+
   const cand =
     activeSlot && eligibleIds.length
       ? sortCandidatesForSlot(eligibleIds, roster, activeSlot).slice(0, 14)
@@ -79,7 +87,7 @@ export function NextPointBuilder({
   const map = rosterById(roster);
 
   return (
-    <section className="space-y-2">
+    <section className="flex min-h-0 flex-1 flex-col gap-2">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -185,7 +193,7 @@ export function NextPointBuilder({
       />
 
       {activeSlot && (
-        <Card className="border-violet-500/30 bg-violet-500/5">
+        <Card className="shrink-0 border-violet-500/30 bg-violet-500/5">
           <CardHeader className="py-2 pb-1">
             <CardTitle className="text-xs font-medium">
               Slot assist · {activeSlot}{" "}
@@ -224,6 +232,20 @@ export function NextPointBuilder({
           </CardContent>
         </Card>
       )}
+
+      <div className="min-h-2 flex-1 shrink" aria-hidden />
+
+      <Button
+        type="button"
+        className="h-11 min-h-[44px] w-full shrink-0 touch-manipulation px-4 text-sm font-semibold shadow-sm landscape:h-10 landscape:min-h-[44px]"
+        disabled={!lineComplete}
+        title={
+          !lineComplete ? "Select all 7 players to confirm" : "Confirm this line"
+        }
+        onClick={onConfirmPointClick}
+      >
+        Confirm point
+      </Button>
     </section>
   );
 }
