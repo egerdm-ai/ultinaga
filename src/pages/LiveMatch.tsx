@@ -319,32 +319,51 @@ export function LiveMatch() {
   };
 
   return (
-    <div className="space-y-4 pb-8">
-      <div className="sticky top-0 z-30 -mx-4 border-b border-border/80 bg-background/90 px-4 py-2.5 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-background/75 md:mx-0 md:rounded-lg md:border md:px-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            <span className="tabular-nums text-lg font-bold leading-none">
-              {scoreUs}–{scoreThem}
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              Next pt {currentPoint} · {points.length} logged
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-1.5">
-            <Button type="button" variant="secondary" size="sm" onClick={clearLine}>
-              Clear line
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setResetOpen(true)}
-            >
-              Reset match
-            </Button>
-          </div>
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <header className="sticky top-0 z-40 flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-background/95 px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md supports-[backdrop-filter]:bg-background/90">
+        <div className="flex min-w-0 flex-1 items-baseline gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Ultinaga
+          </span>
+          <span className="text-2xl font-black tabular-nums leading-none tracking-tight">
+            {scoreUs}
+            <span className="text-muted-foreground/70">–</span>
+            {scoreThem}
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            Pt {currentPoint} · {points.length} logged
+          </span>
         </div>
-      </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="h-8 touch-manipulation px-2.5 text-xs"
+            onClick={clearLine}
+          >
+            Clear
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 touch-manipulation px-2.5 text-xs"
+            onClick={() => setResetOpen(true)}
+          >
+            Reset
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 touch-manipulation px-2 text-xs"
+            onClick={() => undoLastPoint()}
+          >
+            Undo
+          </Button>
+        </div>
+      </header>
 
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent className="sm:max-w-md">
@@ -366,34 +385,34 @@ export function LiveMatch() {
         </DialogContent>
       </Dialog>
 
-      <section className="rounded-lg border border-border/80 bg-card/30 p-2 shadow-sm sm:p-3">
-        <NextPointBuilder
-          currentPoint={currentPoint}
-          scoreUs={scoreUs}
-          scoreThem={scoreThem}
-          nextSide={nextSide}
-          nextGenderPattern={nextGenderPattern}
-          mode={mode}
-          roster={players}
-          lineCtx={lineCtx}
-          scoreCtx={scoreCtx}
-          lastPointPlayerIds={lastIds}
-          eligibleIds={eligibleIds}
-          slots={slots}
-          activeSlot={activeSlot}
-          onSlotClick={(s) => setActiveSlot((prev) => (prev === s ? null : s))}
-          onRemoveSlot={removeSlot}
-          onClear={clearLine}
-          onPlacePlayer={handlePlacePlayer}
-          isPickable={isPickable}
-        />
-      </section>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden landscape:flex-row">
+        <section className="flex min-h-0 flex-[1_1_42%] flex-col overflow-y-auto border-b border-border/70 bg-gradient-to-b from-violet-500/[0.07] to-background p-2 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.06)] dark:shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.06)] landscape:flex-[0_0_min(42vw,21rem)] landscape:max-w-[21rem] landscape:border-b-0 landscape:border-r landscape:p-3">
+          <NextPointBuilder
+            currentPoint={currentPoint}
+            scoreUs={scoreUs}
+            scoreThem={scoreThem}
+            nextSide={nextSide}
+            nextGenderPattern={nextGenderPattern}
+            mode={mode}
+            roster={players}
+            lineCtx={lineCtx}
+            scoreCtx={scoreCtx}
+            lastPointPlayerIds={lastIds}
+            eligibleIds={eligibleIds}
+            slots={slots}
+            activeSlot={activeSlot}
+            onSlotClick={(s) => setActiveSlot((prev) => (prev === s ? null : s))}
+            onRemoveSlot={removeSlot}
+            onClear={clearLine}
+            onPlacePlayer={handlePlacePlayer}
+            isPickable={isPickable}
+          />
+        </section>
 
-      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 min-[480px]:items-start">
-        <section className="space-y-2 rounded-lg border border-border/80 bg-card/30 p-2 shadow-sm sm:p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-xs font-bold uppercase tracking-wide text-foreground sm:text-sm">
-              B — Roster (role · gender)
+        <section className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-br from-emerald-500/[0.06] to-background p-2 landscape:min-w-0 landscape:p-3">
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-emerald-900 dark:text-emerald-100">
+              Roster · pick
             </h2>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger className={buttonVariants({ size: "sm" })}>
@@ -466,234 +485,238 @@ export function LiveMatch() {
             isPickable={isPickable}
           />
         </section>
+      </div>
 
-        <section className="space-y-2 rounded-lg border border-border/80 bg-card/30 p-2 shadow-sm sm:p-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-xs font-bold uppercase tracking-wide text-foreground sm:text-sm">
-              C — Point matrix
-            </h2>
-            <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Compare lines</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Selected history point
-                    </p>
-                    <p>
-                      {matrixSelectedPoint
-                        ? compareNames(matrixSelectedPoint.players)
-                        : "—"}
-                    </p>
+      <section className="border-t-[3px] border-violet-500/40 bg-muted/25 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="sticky top-0 z-10 flex items-center justify-center gap-2 border-b border-border/60 bg-muted/95 px-3 py-2.5 backdrop-blur-md">
+          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+            Point history
+          </span>
+          <span aria-hidden className="select-none text-muted-foreground/60">
+            ↓
+          </span>
+        </div>
+
+        <div className="mx-auto max-w-6xl space-y-4 px-2 py-4 md:px-4">
+          <div className="space-y-2 rounded-xl border border-border/80 bg-card/60 p-3 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-xs font-bold uppercase tracking-wide text-foreground">
+                Point matrix
+              </h2>
+              <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Compare lines</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Selected history point
+                      </p>
+                      <p>
+                        {matrixSelectedPoint
+                          ? compareNames(matrixSelectedPoint.players)
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Your editor (slots)
+                      </p>
+                      <p>{compareNames(slotsToIds(slots))}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Your editor (slots)
-                    </p>
-                    <p>{compareNames(slotsToIds(slots))}</p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setCompareOpen(false)}>
-                    Close
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setCompareOpen(false)}>
+                      Close
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/50">
+              <LineupMatrix
+                points={points}
+                roster={players}
+                highlightPointNumber={matrixSelectedPoint?.pointNumber}
+                onRowClick={(pt) => setMatrixSelectedPoint(pt)}
+              />
+            </div>
+            {matrixSelectedPoint && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-2 py-2 text-[11px] sm:px-3 sm:text-xs">
+                <span className="font-medium">
+                  Point {matrixSelectedPoint.pointNumber}{" "}
+                  <span className="tabular-nums text-muted-foreground">
+                    ({matrixSelectedPoint.scoreUs}–{matrixSelectedPoint.scoreThem})
+                  </span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-8 touch-manipulation"
+                  onClick={() => applyLine(matrixSelectedPoint.players)}
+                >
+                  Load line
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 touch-manipulation"
+                  onClick={() => cloneWithReplace(matrixSelectedPoint)}
+                >
+                  Clone + replace
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 touch-manipulation"
+                  onClick={() => setCompareOpen(true)}
+                >
+                  Compare
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 touch-manipulation"
+                  onClick={() => setMatrixSelectedPoint(null)}
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border/60 bg-background/40 px-3 py-2">
+            <p className="text-[11px] text-muted-foreground">
+              <span className="font-semibold text-foreground">{points.length}</span> points
+              logged · next pt {currentPoint}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 touch-manipulation text-xs"
+              onClick={() => loadExample()}
+            >
+              Load example match
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {[...pills, ...extraPills].map((p) => (
+              <div
+                key={p.id}
+                className="rounded-full border border-border bg-card px-2.5 py-1 text-xs shadow-sm"
+              >
+                <span className="font-medium text-foreground">{p.label}:</span>{" "}
+                <span className="text-muted-foreground">{p.names.join(", ")}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Match &amp; pace</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2 text-sm">
+                <div className="flex flex-wrap gap-1">
+                  <Button variant="outline" size="sm" onClick={() => bumpScore(1, 0)}>
+                    Us +1
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="max-h-[min(52vh,420px)] overflow-y-auto min-[480px]:max-h-none min-[480px]:overflow-visible">
-            <LineupMatrix
-              points={points}
-              roster={players}
-              highlightPointNumber={matrixSelectedPoint?.pointNumber}
-              onRowClick={(pt) => setMatrixSelectedPoint(pt)}
-            />
-          </div>
-          {matrixSelectedPoint && (
-            <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-2 py-2 text-[11px] sm:px-3 sm:text-xs">
-              <span className="font-medium">
-                Point {matrixSelectedPoint.pointNumber}{" "}
-                <span className="tabular-nums text-muted-foreground">
-                  ({matrixSelectedPoint.scoreUs}–{matrixSelectedPoint.scoreThem})
+                  <Button variant="outline" size="sm" onClick={() => bumpScore(-1, 0)}>
+                    Us −1
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => bumpScore(0, 1)}>
+                    Them +1
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => bumpScore(0, -1)}>
+                    Them −1
+                  </Button>
+                </div>
+                <span className="tabular-nums font-semibold">
+                  {scoreUs} — {scoreThem}
                 </span>
-              </span>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => applyLine(matrixSelectedPoint.players)}
-              >
-                Load line
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => cloneWithReplace(matrixSelectedPoint)}
-              >
-                Clone + replace ineligible
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setCompareOpen(true)}
-              >
-                Compare lines
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setMatrixSelectedPoint(null)}
-              >
-                Clear
-              </Button>
-            </div>
-          )}
-        </section>
-      </div>
-
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
-            Live match
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Spreadsheet history · next line · rotation buckets
-          </p>
-          <p className="mt-1.5 flex flex-wrap items-baseline gap-2">
-            <span className="text-[11px] text-muted-foreground">Points logged</span>
-            <span className="rounded-md bg-primary/15 px-2 py-0.5 text-2xl font-bold tabular-nums leading-none text-primary">
-              {points.length}
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              (next: pt {currentPoint})
-            </span>
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Button variant="outline" size="sm" onClick={() => loadExample()}>
-            Example
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => undoLastPoint()}>
-            Undo
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {[...pills, ...extraPills].map((p) => (
-          <div
-            key={p.id}
-            className="rounded-full border border-border bg-card px-2.5 py-1 text-xs shadow-sm"
-          >
-            <span className="font-medium text-foreground">{p.label}:</span>{" "}
-            <span className="text-muted-foreground">{p.names.join(", ")}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Match &amp; pace</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2 text-sm">
-            <div className="flex flex-wrap gap-1">
-              <Button variant="outline" size="sm" onClick={() => bumpScore(1, 0)}>
-                Us +1
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => bumpScore(-1, 0)}>
-                Us −1
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => bumpScore(0, 1)}>
-                Them +1
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => bumpScore(0, -1)}>
-                Them −1
-              </Button>
-            </div>
-            <span className="tabular-nums font-semibold">
-              {scoreUs} — {scoreThem}
-            </span>
-            <input
-              className="h-8 min-w-[120px] rounded-md border border-input bg-transparent px-2 text-sm"
-              value={opponent}
-              onChange={(e) => setOpponent(e.target.value)}
-              placeholder="Opponent"
-            />
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-              <span className="rounded-md border bg-muted/50 px-2 py-1 font-semibold">
-                Next:{" "}
-                <span
-                  className={
-                    nextSide === "D"
-                      ? "text-blue-700 dark:text-blue-300"
-                      : "text-orange-700 dark:text-orange-300"
-                  }
-                >
-                  {nextSide === "O" ? "O (offense)" : "D (defense)"}
-                </span>
-              </span>
-              <span className="rounded-md border bg-muted/50 px-2 py-1 tabular-nums">
-                Ratio: {nextGenderPattern === "4M3F" ? "4M-3F" : "4F-3M"}
-              </span>
-              {points.length === 0 ? (
-                <Select
-                  value={startingGenderPattern}
-                  onValueChange={(v) =>
-                    setStartingGenderPattern(v as GenderPattern)
-                  }
-                >
-                  <SelectTrigger className="h-8 w-[200px] text-xs">
-                    <SelectValue placeholder="First point ratio" />
+                <input
+                  className="h-8 min-w-[120px] rounded-md border border-input bg-transparent px-2 text-sm"
+                  value={opponent}
+                  onChange={(e) => setOpponent(e.target.value)}
+                  placeholder="Opponent"
+                />
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <span className="rounded-md border bg-muted/50 px-2 py-1 font-semibold">
+                    Next:{" "}
+                    <span
+                      className={
+                        nextSide === "D"
+                          ? "text-blue-700 dark:text-blue-300"
+                          : "text-orange-700 dark:text-orange-300"
+                      }
+                    >
+                      {nextSide === "O" ? "O (offense)" : "D (defense)"}
+                    </span>
+                  </span>
+                  <span className="rounded-md border bg-muted/50 px-2 py-1 tabular-nums">
+                    Ratio: {nextGenderPattern === "4M3F" ? "4M-3F" : "4F-3M"}
+                  </span>
+                  {points.length === 0 ? (
+                    <Select
+                      value={startingGenderPattern}
+                      onValueChange={(v) =>
+                        setStartingGenderPattern(v as GenderPattern)
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-[200px] text-xs">
+                        <SelectValue placeholder="First point ratio" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="4M3F">First point: 4M-3F (ABBA)</SelectItem>
+                        <SelectItem value="4F3M">First point: 4F-3M (ABBA)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <span className="text-muted-foreground" title="A-B-B-A repeats">
+                      ABBA start:{" "}
+                      {startingGenderPattern === "4M3F" ? "4M-3F" : "4F-3M"}
+                    </span>
+                  )}
+                </div>
+                <Select value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
+                  <SelectTrigger className="h-8 w-[120px]">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="4M3F">First point: 4M-3F (ABBA)</SelectItem>
-                    <SelectItem value="4F3M">First point: 4F-3M (ABBA)</SelectItem>
+                    <SelectItem value="close">Close</SelectItem>
+                    <SelectItem value="balanced">Balanced</SelectItem>
+                    <SelectItem value="blowout">Blowout</SelectItem>
                   </SelectContent>
                 </Select>
-              ) : (
-                <span className="text-muted-foreground" title="A-B-B-A repeats">
-                  ABBA start:{" "}
-                  {startingGenderPattern === "4M3F" ? "4M-3F" : "4F-3M"}
-                </span>
-              )}
-            </div>
-            <Select value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
-              <SelectTrigger className="h-8 w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="close">Close</SelectItem>
-                <SelectItem value="balanced">Balanced</SelectItem>
-                <SelectItem value="blowout">Blowout</SelectItem>
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">AI coach</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button
-              className="w-full"
-              variant="secondary"
-              size="sm"
-              disabled={llmLoading}
-              onClick={() => void runLlm()}
-            >
-              {llmLoading ? "…" : "Explain"}
-            </Button>
-            {llmErr && <p className="text-xs text-destructive">{llmErr}</p>}
-            {llmText && (
-              <p className="max-h-28 overflow-y-auto text-xs text-muted-foreground whitespace-pre-wrap">
-                {llmText}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">AI coach</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button
+                  className="w-full touch-manipulation"
+                  variant="secondary"
+                  size="sm"
+                  disabled={llmLoading}
+                  onClick={() => void runLlm()}
+                >
+                  {llmLoading ? "…" : "Explain"}
+                </Button>
+                {llmErr && <p className="text-xs text-destructive">{llmErr}</p>}
+                {llmText && (
+                  <p className="max-h-28 overflow-y-auto text-xs text-muted-foreground whitespace-pre-wrap">
+                    {llmText}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

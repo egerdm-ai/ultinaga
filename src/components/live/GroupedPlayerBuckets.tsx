@@ -131,7 +131,7 @@ export function GroupedPlayerBuckets({
                     }
                     onClick={() => pickable && onPlayerClick(r.player.id)}
                     className={cn(
-                      "w-full rounded border px-1 py-0.5 text-left text-[10px] leading-tight transition-colors",
+                      "w-full touch-manipulation rounded border px-1.5 py-1 text-left text-[11px] font-medium leading-snug transition-colors active:scale-[0.98] sm:text-[10px]",
                       sel &&
                         "border-violet-500 bg-violet-500/15 ring-1 ring-violet-500/40",
                       !sel &&

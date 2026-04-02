@@ -128,7 +128,7 @@
     @apply antialiased bg-background text-foreground;
   }
   #root {
-    @apply min-h-svh w-full;
+    @apply flex min-h-svh w-full flex-col;
   }
   html {
     @apply font-sans;
